@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jom Kelaskan Haiwan!</title>
+<style>
+:root{--ink:#344054;--pink:#ffe3ef;--blue:#dff4ff;--green:#e2f8df;--yellow:#fff3bd;--purple:#eee5ff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;color:var(--ink);background:linear-gradient(135deg,#fff4fb,#eaf8ff 55%,#f4ffe9);min-height:100vh}
+header{text-align:center;padding:24px 14px 12px}
+h1{margin:0;font-size:clamp(1.8rem,4vw,3rem);color:#7a4bb7;text-shadow:2px 2px #fff}
+header p{font-size:1.08rem;margin:10px auto;max-width:720px;line-height:1.5}
+.pill{display:inline-block;background:#fff;border:2px dashed #d6b9ff;border-radius:22px;padding:7px 14px;font-weight:bold}
+main{max-width:1100px;margin:auto;padding:10px 16px 30px}
+.animal-bank{background:#ffffffb8;border:3px dashed #d4c4ef;border-radius:24px;padding:14px;margin:12px 0 18px}
+.bank-title{text-align:center;font-size:1.15rem;font-weight:bold;margin:0 0 10px}
+.animals{display:grid;grid-template-columns:repeat(5,minmax(90px,1fr));gap:12px}
+.animal{background:white;border:2px solid #eadff8;border-radius:18px;min-height:115px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px 4px;cursor:grab;box-shadow:0 4px 0 #e8def4;user-select:none;touch-action:manipulation;transition:transform .15s,border-color .15s}
+.animal:hover{transform:translateY(-3px);border-color:#a98be4}
+.animal:active{cursor:grabbing}
+.animal .pic{font-size:3.1rem;line-height:1.1;filter:drop-shadow(0 2px 0 #f4eafc)}
+.animal .name{font-weight:bold;font-size:.95rem}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.zone{border-radius:24px;padding:14px;min-height:240px;border:3px dashed;transition:background .2s,transform .2s}
+.zone.meat{background:#fff0e9;border-color:#f4a17d}
+.zone.plants{background:#eaffea;border-color:#8fd59a}
+.zone h2{text-align:center;margin:2px 0 5px;font-size:1.35rem}
+.zone .hint{text-align:center;margin:0 0 10px;font-size:.9rem}
+.droparea{min-height:145px;display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-start;gap:8px;padding:8px;border-radius:16px}
+.zone.over .droparea{background:#ffffffa8;outline:3px solid #b9a1ef}
+.placed{min-height:76px;min-width:82px;padding:6px 8px;cursor:pointer;box-shadow:0 3px 0 #ddd}
+.placed .pic{font-size:2.25rem}.placed .name{font-size:.78rem}
+.controls{text-align:center;margin:18px 0}
+button{border:0;border-radius:25px;padding:12px 22px;margin:5px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 0 #c6b4e8}
+#check{background:#c9f3c7;color:#275d36}#reset{background:#eadfff;color:#593a89}
+#feedback{font-size:1.15rem;font-weight:bold;text-align:center;min-height:32px;margin:8px}
+.score{text-align:center;font-weight:bold;background:white;display:table;margin:8px auto;padding:8px 16px;border-radius:20px}
+footer{text-align:center;padding:0 12px 24px;color:#705b8c;font-size:.9rem}
+@media(max-width:650px){.animals{grid-template-columns:repeat(2,minmax(100px,1fr))}.zones{grid-template-columns:1fr}.animal{min-height:100px}.animal .pic{font-size:2.7rem}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐾 Jom Kelaskan Haiwan! 🐾</h1>
+  <p>Hai, anak-anak bijak! Seret gambar haiwan ke dalam kotak yang betul.<br><b>Haiwan makan daging</b> atau <b>haiwan makan tumbuhan</b>?</p>
+  <span class="pill">🎯 10 haiwan • 2 kumpulan</span>
+</header>
+<main>
+  <section class="animal-bank">
+    <p class="bank-title">🌈 Pilih dan padankan gambar haiwan di bawah!</p>
+    <div class="animals" id="animalBank"></div>
+  </section>
+  <section class="zones">
+    <div class="zone meat" data-kind="meat">
+      <h2>🥩 KUMPULAN MAKAN DAGING</h2>
+      <p class="hint">Haiwan yang makan haiwan lain</p>
+      <div class="droparea" aria-label="Kotak haiwan makan daging"></div>
+    </div>
+    <div class="zone plants" data-kind="plants">
+      <h2>🥕 KUMPULAN MAKAN TUMBUHAN</h2>
+      <p class="hint">Haiwan yang makan rumput, daun atau tumbuhan</p>
+      <div class="droparea" aria-label="Kotak haiwan makan tumbuhan"></div>
+    </div>
+  </section>
+  <div class="controls">
+    <button id="check">⭐ Semak Jawapan</button>
+    <button id="reset">🔄 Cuba Semula</button>
+  </div>
+  <div id="feedback" role="status"></div>
+  <div class="score" id="score">Haiwan dipadankan: 0 / 10</div>
+</main>
+<footer>💖 Bagus, anak-anak! Teruskan belajar sambil bermain bersama Cikgu!</footer>
+<script>
+const data = [
+ {id:'lion',name:'Singa',pic:'🦁',kind:'meat'},
+ {id:'tiger',name:'Harimau',pic:'🐯',kind:'meat'},
+ {id:'wolf',name:'Serigala',pic:'🐺',kind:'meat'},
+ {id:'eagle',name:'Helang',pic:'🦅',kind:'meat'},
+ {id:'croc',name:'Buaya',pic:'🐊',kind:'meat'},
+ {id:'cow',name:'Lembu',pic:'🐮',kind:'plants'},
+ {id:'rabbit',name:'Arnab',pic:'🐰',kind:'plants'},
+ {id:'elephant',name:'Gajah',pic:'🐘',kind:'plants'},
+ {id:'giraffe',name:'Zirafah',pic:'🦒',kind:'plants'},
+ {id:'panda',name:'Panda',pic:'🐼',kind:'plants'}
+];
+const bank=document.getElementById('animalBank');
+const zones=[...document.querySelectorAll('.zone')];
+let selected=null;
+function makeCard(a){
+ const el=document.createElement('div');
+ el.className='animal'; el.draggable=true; el.dataset.id=a.id;
+ el.setAttribute('tabindex','0'); el.setAttribute('aria-label',a.name+', pilih atau seret');
+ el.innerHTML=`<span class="pic" aria-hidden="true">${a.pic}</span><span class="name">${a.name}</span>`;
+ el.addEventListener('dragstart',e=>{selected=a.id;e.dataTransfer.setData('text/plain',a.id)});
+ el.addEventListener('click',()=>{selected=a.id;document.getElementById('feedback').textContent='Sekarang pilih kotak kumpulan yang betul 😊';document.querySelectorAll('.animal').forEach(c=>c.style.outline='');el.style.outline='3px solid #8f6ad8'});
+ el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selected=a.id;document.getElementById('feedback').textContent='Sekarang pilih kotak kumpulan yang betul 😊'}});
+ return el;
+}
+function render(){
+ bank.innerHTML='';
+ const shuffled=[...data].sort(()=>Math.random()-.5);
+ shuffled.forEach(a=>bank.appendChild(makeCard(a)));
+ zones.forEach(z=>z.querySelector('.droparea').innerHTML='');
+ selected=null;updateScore();document.getElementById('feedback').textContent='';
+}
+function place(id,zone){
+ const a=data.find(x=>x.id===id);if(!a)return;
+ const existing=document.querySelector(`[data-id="${id}"]`);
+ if(existing && existing.parentElement && existing.parentElement.classList.contains('droparea')) existing.remove();
+ const card=makeCard(a);card.classList.add('placed');card.draggable=true;
+ zone.querySelector('.droparea').appendChild(card);
+ selected=null;document.querySelectorAll('.animal').forEach(c=>c.style.outline='');
+ updateScore();
+}
+zones.forEach(z=>{
+ z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over')});
+ z.addEventListener('dragleave',()=>z.classList.remove('over'));
+ z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');const id=e.dataTransfer.getData('text/plain')||selected;if(id)place(id,z)});
+ z.addEventListener('click',e=>{if(selected && !e.target.closest('.animal'))place(selected,z)});
+ z.querySelector('.droparea').addEventListener('click',e=>{const card=e.target.closest('.animal');if(card){selected=card.dataset.id;document.getElementById('feedback').textContent='Pilih kotak kumpulan yang betul untuk haiwan ini 😊'}});
+});
+function updateScore(){
+ const placed=[...document.querySelectorAll('.droparea .animal')];
+ document.getElementById('score').textContent=`Haiwan dipadankan: ${placed.length} / 10`;
+}
+document.getElementById('check').addEventListener('click',()=>{
+ const placed=[...document.querySelectorAll('.zone .droparea .animal')];
+ if(placed.length<10){document.getElementById('feedback').textContent=`Bagus! Kamu sudah padankan ${placed.length} haiwan. Cuba padankan semua 10 haiwan dahulu. 🌟`;return;}
+ let correct=0;
+ placed.forEach(card=>{
+   const a=data.find(x=>x.id===card.dataset.id);
+   const zone=card.closest('.zone');
+   const ok=a.kind===zone.dataset.kind;
+   card.style.borderColor=ok?'#35a853':'#ef6b68';
+   card.style.background=ok?'#effff0':'#fff0f0';
+   if(ok)correct++;
+ });
+ document.getElementById('feedback').textContent=correct===10?'🎉 Hebat! Semua jawapan betul! Kamu memang bijak! 💖':`🌟 Kamu mendapat ${correct} daripada 10. Cuba semak semula haiwan yang bertanda merah.`;
+ document.getElementById('score').textContent=`Jawapan betul: ${correct} / 10`;
+});
+document.getElementById('reset').addEventListener('click',render);
+render();
+</script>
+</body>
+</html>
